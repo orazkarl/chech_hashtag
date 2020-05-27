@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">User ID</th>
+            <th scope="col">Ник (username)</th>
+            <th scope="col">Дежурный ник (username)</th>
+            <th scope="col">Связан ли?</th>
+            <th scope="col">Кол постов</th>
+            <th scope="col">Кол лайков</th>
+            <th scope="col">Прошел</th>
+            <th scope="col">Непрошел</th>
+            <th scope="col">Время</th>
+            <th scope="col">Инфо</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for post in object_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ post.user_id }}</td>
+                <td>
+
+                    {{ post.username }}
+
+{#                    <br>#}
+{#                    <form action="{% url 'get_username' %}" method="get">#}
+{#                        <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">#}
+{#                        <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">#}
+{#                        <input type="submit" name="get_username" value="Обновить ник">#}
+{#                    </form>#}
+
+                <td> {{ post.secondary_user }}</td>
+            <td>{% if post.is_bound_shpion  %}
+                Да
+                {% else %}
+                Нет
+                {% endif %}
+            </td>
+                <td>{{ post.shortcodes.all.count }} <br>{% for shortcode in post.shortcodes.all %}
+                    <a href="http://instagram.com/p/{{ shortcode }}">{{ shortcode }}</a><br>{% endfor %}</td>
+                <td>
+                    {% for shortcode in post.shortcodes.all %} {{ shortcode }} {{ shortcode.like_users.all.count }}
+                        <br>{% endfor %}
+            <form action="{% url 'get_past_posts' %}" method="get">
+                        <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">
+                        <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">
+                        <input type="text" name="post_id" value="{{ post.id }}" style="display: none">
+                        <input type="submit" name="get_past_posts" value="Считать лайки">
+                    </form>
+                </td>
+                <td>
+                    {{ post.past_posts}}
+                </td>
+                <td>
+                    {{ post.not_past_posts }}
+                </td>
+              <td>
+                    {% for shortcode in post.shortcodes.all %} {{ shortcode }} <br>{{ shortcode.time }}
+                        <br>{% endfor %}
+              </td>
+                <td>
+                    {% if post.not_past_posts != '0' %}
+                        <form action="{% url 'info' %}" method="get">
+                            <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">
+                            <input type="text" name="status" value="all" style="display: none">
+                            <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">
+                            <input type="submit" name="info" value="info">
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+
+            <th scope="col">Шпион аккаунт (username)</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for shpion in object_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+
+                <td>{{ shpion.username }}</td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <form action="{% url 'shpion' %}">
+        <div class="row">
+            <div class="col-md-6">Логин: <input type="text" name="username" class="form-control" placeholder="Напишите НИК шпион аккаунта без @ (Например: cristiano)"></div>
+            <div class="col-md-6">Пароль: <input type="password" name="password" class="form-control"></div>
+        </div>
+
+        <br>
+        <input type="submit" name="submit"  class="btn btn-primary">
+    </form>
+{% endblock %}

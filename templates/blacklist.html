@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+
+            <th scope="col">Черный список (username)</th>
+            <th scope="col"></th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in object_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+
+                <td>{{ user.username }}</td>
+            <td>
+                    <form action="{% url 'blacklist' %}">
+                        <input type="text" name="username" value="{{ user.username }}" style="display: none">
+                        <input type="submit" name="submit" value="delete" class="btn btn-danger">
+                    </form>
+                </td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <form action="{% url 'blacklist' %}">
+        <div class="row">
+            <div class="col-md-6">Логин: <input type="text" name="username" class="form-control" placeholder="Напишите НИК шпион аккаунта без @ (Например: cristiano)"></div>
+        </div>
+        <br>
+        <input type="submit" name="submit"  class="btn btn-primary">
+    </form>
+{% endblock %}

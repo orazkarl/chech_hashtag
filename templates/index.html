@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    {#    <form action="{% url 'hashtag' %}" method="get">#}
+    {#        <div class="form-group">#}
+    {##}
+    {#            <label for="inputHashtag">Hashtag</label>#}
+    {#            <input type="text" class="form-control" id="inputHashtag" name="hashtag" placeholder="напишите хэштег">#}
+    {#        </div>#}
+    {##}
+    {#        <button type="submit" class="btn btn-primary">Submit</button>#}
+    {#    </form>#}
+    {#    <div>#}
+    {#        {% if count_posts %}#}
+    {#            Найдено {{ count_posts }} постов#}
+    {#            <br>#}
+    {#            <form action="">#}
+    {#                <input type="submit" name="makeout" value="Разобрать" class="btn btn-primary">#}
+    {#            </form>#}
+    {#        {% endif %}#}
+    {#    </div>#}
+    <form action="{% url 'index' %}" method="get">
+        <input type="text" name="submit" value="submit" style="display: none">
+        <input type="submit" value="Очистить" class="btn btn-danger">
+    </form>
+
+
+        Количество хэштегов: <input type="text" id="member" name="member" value="" class="form-control"><br/>
+        <button onclick="addFields()" class="btn btn-primary">Добавить поля</button>
+        <br>
+        <form action="{% url 'index' %}" method="get">
+            <div class="form-group">
+                <div id="res">
+
+                </div>
+            </div>
+
+
+        </form>
+    <br>
+        <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Хэштег</th>
+            <th scope="col">Количество</th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for hashtag in object_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ hashtag.hashtag }}</td>
+                <td>{{ hashtag.count }}</td>
+                <td><a href="hashtag/?hashtag={{ hashtag.hashtag }}">Открыть</a>
+                </td>
+                <td>
+{#                    <a href="hashtag/?hashtag={{ hashtag.hashtag }}">Обновить</a>#}
+{#                    <form action="{% url 'index' %}">#}
+{#                        <input type="text" name="hashtag" value="{{ hashtag.hashtag }}" style="display:none;">#}
+{#                        <input type="submit" name="submit" value="Обновить" class="btn btn-primary">#}
+{#                    </form>#}
+                    </td>
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+
+
+
+
+    <br>
+
+    <script>
+
+        function addFields() {
+            // Number of inputs to create
+            var number = document.getElementById("member").value;
+            // Container <div> where dynamic content will be placed
+            var container = document.getElementById("res");
+            // Clear previous contents of the container
+            while (container.hasChildNodes()) {
+                container.removeChild(container.lastChild);
+            }
+            for (i = 0; i < number; i++) {
+                // Append a node with a random text
+                container.appendChild(document.createTextNode("Хэштег " + (i + 1)));
+                // Create an <input> element, set its type and name attributes
+                var input = document.createElement("input");
+                input.type = "text";
+                input.name = "hashtag" + i;
+                input.className = "form-control";
+                container.appendChild(input);
+                // Append a line break
+                container.appendChild(document.createElement("br"));
+            }
+            container.appendChild(document.createElement("br"));
+            var btn = container.appendChild(document.createElement("button"));
+            btn.type = "submit";
+            btn.name = 'submit'
+            btn.value = 'submit'
+            btn.innerHTML = "Отправить";
+            btn.className = "btn btn-primary";
+        }
+    </script>
+
+{% endblock %}
+{% block scripts %}
+
+{% endblock %}

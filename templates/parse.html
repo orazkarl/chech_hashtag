@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    {% for post in list_posts %}
+        {{ post }}
+        <br>
+    {% endfor %}
+
+{% endblock %}

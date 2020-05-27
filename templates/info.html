@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    {% for post in list_posts %}
+        <a href="https://www.instagram.com/p/{{ post }}/">{{ post }}</a>
+        <br>
+    {% endfor %}
+
+{% endblock %}

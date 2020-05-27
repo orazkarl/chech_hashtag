@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Основной ник(username)</th>
+            <th scope="col">Основной ник(user_id)</th>
+            <th scope="col">Дежурный ник</th>
+            <th scope="col"></th>
+
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for user in object_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ user.username }}</td>
+                <td>{{ user.user_id }}</td>
+                <td>{{ user.secondary_user }}</td>
+                <td>
+                    <form action="{% url 'secondary' %}">
+                        <input type="text" name="username" value="{{ user.user_id }}" style="display: none">
+                        <input type="submit" name="submit" value="delete" class="btn btn-danger">
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <form action="{% url 'secondary' %}">
+        <div class="row">
+            <div class="col-md-6">Главный ник <input type="text" name="username" class="form-control" placeholder="Напишите НИК главного аккаунта без @ (Например: cristiano)"></div>
+            <div class="col-md-6">Дежурный ник <input type="text" name="secondary_user" class="form-control" placeholder="Напишите НИК дежурного аккаунта без @ (Например: cristiano)"></div>
+        </div>
+        <br>
+        <input type="submit" name="submit"  class="btn btn-primary">
+    </form>
+{% endblock %}

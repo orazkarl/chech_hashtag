@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <br>
+    <form action="{% url 'parse_users' %}">
+
+{#            <input type="a" name="username" class="form-control">#}
+        <textarea name="users" id="" cols="30" rows="10">
+
+        </textarea>
+        <br>
+        <input type="submit" name="submit"  class="btn btn-primary">
+    </form>
+    <br>
+    {% for post in list_posts %}
+        {{ post }}
+        <br>
+    {% endfor %}
+{% endblock %}
