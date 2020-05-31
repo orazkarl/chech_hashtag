@@ -393,7 +393,7 @@ class BlackListView(generic.ListView):
 def parse(request):
     hashtag = request.GET['hashtag']
     l = []
-    for user in UserPost.objects.filter(hashtag=hashtag, is_black_list=True, is_bound_shpion=False):
+    for user in UserPost.objects.filter(hashtag=hashtag, is_bound_shpion=False):
         l.append('@' + str(user.username))
 
     return render(request, 'parse.html', {'list_posts': l})
@@ -411,7 +411,7 @@ def parse_users(request):
         if '@' in user:
             user = user.replace('@', '')
         if not UserPost.objects.filter(username=user, is_bound_shpion=True):
-            l.append(user)
+            l.append('@' + str(user))
 
     # hashtag = str(request.GET['hashtag']).split('=')[1]
 
