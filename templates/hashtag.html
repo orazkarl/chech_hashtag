@@ -2,34 +2,46 @@
 {% load static %}
 
 {% block content %}
-{#    <form action="{% url 'hashtag' %}" method="get">#}
-{#        <div class="form-group">#}
-{##}
-{#            <label for="inputHashtag">Hashtag</label>#}
-{#            <input type="text" class="form-control" id="inputHashtag" name="hashtag" placeholder="напишите хэштег">#}
-{#        </div>#}
-{##}
-{#        <button type="submit" class="btn btn-primary">Submit</button>#}
-{#    </form>#}
-{#    <div>#}
-{#        {% if count_posts %}#}
-{#            Найдено {{ count_posts }} постов#}
-{#            <br>#}
-{#            <form action="">#}
-{#                <input type="submit" name="makeout" value="Разобрать" class="btn btn-primary">#}
-{#            </form>#}
-{#        {% endif %}#}
-{#    </div>#}
+    {#    <form action="{% url 'hashtag' %}" method="get">#}
+    {#        <div class="form-group">#}
+    {##}
+    {#            <label for="inputHashtag">Hashtag</label>#}
+    {#            <input type="text" class="form-control" id="inputHashtag" name="hashtag" placeholder="напишите хэштег">#}
+    {#        </div>#}
+    {##}
+    {#        <button type="submit" class="btn btn-primary">Submit</button>#}
+    {#    </form>#}
+    {#    <div>#}
+    {#        {% if count_posts %}#}
+    {#            Найдено {{ count_posts }} постов#}
+    {#            <br>#}
+    {#            <form action="">#}
+    {#                <input type="submit" name="makeout" value="Разобрать" class="btn btn-primary">#}
+    {#            </form>#}
+    {#        {% endif %}#}
+    {#    </div>#}
+
 
     <div class="row">
-        <div class="col-md-6"><form action="{% url 'detailcheck' %}">
-        <input type="text" name="hashtag" value="{{ request.get_full_path  }}" style="display:none;">
-        <input type="submit" name="submit" value="Детальная проверка" class="btn btn-secondary">
-    </form></div>
-        <div class="col-md-6"><form action="{% url 'parse' %}">
-        <input type="text" name="hashtag" value="{{ request.get_full_path  }}" style="display:none;">
-        <input type="submit" name="submit" value="Разобрать" class="btn btn-secondary">
-    </form></div>
+        <div class="col-md-2">
+            <form action="{% url 'detailcheck' %}">
+                <input type="text" name="hashtag" value="{{ hashtag }}" style="display:none;">
+                <input type="submit" name="submit" value="Детальная проверка" class="btn btn-secondary">
+
+            </form>
+        </div>
+        <div class="col-md-2">
+            <form action="{% url 'parse' %}">
+                <input type="text" name="hashtag" value="{{ hashtag }}" style="display:none;">
+                <input type="submit" name="submit" value="Разобрать" class="btn btn-secondary">
+            </form>
+        </div>
+        <div class="col-md-2">
+            <form action="{% url 'refresh' %}">
+                <input type="text" name="hashtag" value="{{ hashtag }}" style="display:none;">
+                <input type="submit" name="submit" value="Обновить" class="btn btn-secondary">
+            </form>
+        </div>
     </div>
 
 
@@ -59,26 +71,27 @@
 
                     {{ post.username }}
 
-{#                    <br>#}
-{#                    <form action="{% url 'get_username' %}" method="get">#}
-{#                        <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">#}
-{#                        <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">#}
-{#                        <input type="submit" name="get_username" value="Обновить ник">#}
-{#                    </form>#}
+                    {#                    <br>#}
+                    {#                    <form action="{% url 'get_username' %}" method="get">#}
+                    {#                        <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">#}
+                    {#                        <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">#}
+                    {#                        <input type="submit" name="get_username" value="Обновить ник">#}
+                    {#                    </form>#}
 
                 <td> {{ post.secondary_user }}</td>
-            <td>{% if post.is_bound_shpion  %}
-                Да
+                <td>{% if post.is_bound_shpion %}
+                    Да
                 {% else %}
-                Нет
+                    Нет
                 {% endif %}
-            </td>
+
+                </td>
                 <td>{{ post.shortcodes.all.count }} <br>{% for shortcode in post.shortcodes.all %}
                     <a href="http://instagram.com/p/{{ shortcode }}">{{ shortcode }}</a><br>{% endfor %}</td>
                 <td>
                     {% for shortcode in post.shortcodes.all %} {{ shortcode }} {{ shortcode.count_likes }}
                         <br>{% endfor %}
-            <form action="{% url 'get_past_posts' %}" method="get">
+                    <form action="{% url 'get_past_posts' %}" method="get">
                         <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">
                         <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">
                         <input type="text" name="post_id" value="{{ post.id }}" style="display: none">
@@ -86,17 +99,17 @@
                     </form>
                 </td>
                 <td>
-{#                    {{ post.past_posts }}#}
+                    {#                    {{ post.past_posts }}#}
                     {{ post.past_posts_bound_shpion }}
                 </td>
                 <td>
-{#                    {{ post.not_past_posts }}#}
-                    {{ post.not_past_posts_bound_shpion  }}
+                    {#                    {{ post.not_past_posts }}#}
+                    {{ post.not_past_posts_bound_shpion }}
                 </td>
-              <td>
+                <td>
                     {% for shortcode in post.shortcodes.all %} {{ shortcode }} <br>{{ shortcode.time }}
                         <br>{% endfor %}
-              </td>
+                </td>
                 <td>
                     {% if post.not_past_posts != '0' %}
                         <form action="{% url 'info' %}" method="get">
