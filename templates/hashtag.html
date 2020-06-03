@@ -21,7 +21,11 @@
     {#        {% endif %}#}
     {#    </div>#}
 
-
+    <div>
+    <h5>{{ ip }}</h5>
+    <h5>Проверено: {{ check }}</h5>
+    <h5>Всего: {{ all}}</h5>
+    </div>
     <div class="row">
         <div class="col-md-2">
             <form action="{% url 'detailcheck' %}">
@@ -36,12 +40,13 @@
                 <input type="submit" name="submit" value="Разобрать" class="btn btn-secondary">
             </form>
         </div>
-        <div class="col-md-2">
-            <form action="{% url 'refresh' %}">
-                <input type="text" name="hashtag" value="{{ hashtag }}" style="display:none;">
-                <input type="submit" name="submit" value="Обновить" class="btn btn-secondary">
-            </form>
-        </div>
+{#        <div class="col-md-2">#}
+{#            <form action="{% url 'refresh' %}">#}
+{#                <input type="text" name="hashtag" value="{{ hashtag }}" style="display:none;">#}
+{#                <input type="submit" name="submit" value="Обновить" class="btn btn-secondary">#}
+{#            </form>#}
+{#        </div>#}
+
     </div>
 
 
@@ -91,12 +96,12 @@
                 <td>
                     {% for shortcode in post.shortcodes.all %} {{ shortcode }} {{ shortcode.count_likes }}
                         <br>{% endfor %}
-                    <form action="{% url 'get_past_posts' %}" method="get">
-                        <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">
-                        <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">
-                        <input type="text" name="post_id" value="{{ post.id }}" style="display: none">
-                        <input type="submit" name="get_past_posts" value="Считать лайки">
-                    </form>
+{#                    <form action="{% url 'get_past_posts' %}" method="get">#}
+{#                        <input type="text" name="user_id" value="{{ post.user_id }}" style="display: none">#}
+{#                        <input type="text" name="hashtag" value="{{ post.hashtag }}" style="display: none">#}
+{#                        <input type="text" name="post_id" value="{{ post.id }}" style="display: none">#}
+{#                        <input type="submit" name="get_past_posts" value="Считать лайки">#}
+{#                    </form>#}
                 </td>
                 <td>
                     {#                    {{ post.past_posts }}#}

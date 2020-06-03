@@ -7,7 +7,7 @@
         <tr>
             <th scope="col">#</th>
             <th scope="col">Основной ник(username)</th>
-            <th scope="col">Основной ник(user_id)</th>
+{#            <th scope="col">Основной ник(user_id)</th>#}
             <th scope="col">Дежурный ник</th>
             <th scope="col"></th>
 
@@ -19,11 +19,11 @@
             <tr>
                 <th scope="row">{{ forloop.counter }}</th>
                 <td>{{ user.username }}</td>
-                <td>{{ user.user_id }}</td>
+{#                <td>{{ user.user_id }}</td>#}
                 <td>{{ user.secondary_user }}</td>
                 <td>
                     <form action="{% url 'secondary' %}">
-                        <input type="text" name="username" value="{{ user.user_id }}" style="display: none">
+                        <input type="text" name="username" value="{{ user.username }}" style="display: none">
                         <input type="submit" name="submit" value="delete" class="btn btn-danger">
                     </form>
                 </td>

@@ -8,19 +8,18 @@ class Hashtag(models.Model):
 
     def __str__(self):
         return self.hashtag
-class UserLike(models.Model):
-    shortcode = models.CharField(max_length=150)
-    username = models.CharField(max_length=150, null=True, blank=True)
-    user_id = models.CharField(max_length=150)
-    def __str__(self):
-        return self.username
+class PostList(models.Model):
+    hashtag = models.CharField(max_length=150)
+    posts = models.CharField(max_length=2500000)
 
+    def __str__(self):
+        return self.posts
 class Post(models.Model):
     hashtag = models.CharField(max_length=150)
     shortcode = models.CharField(max_length=150)
     user_id = models.CharField(max_length=150)
     username = models.CharField(max_length=150, null=True, blank=True)
-    like_users = models.ManyToManyField(UserLike, null=True, blank=True)
+    # like_users = models.ManyToManyField(UserLike, null=True, blank=True)
     count_likes = models.PositiveIntegerField()
     time = models.CharField(max_length=150, null=True, blank=True)
     is_bound_shpion = models.BooleanField(default=False)
@@ -48,12 +47,6 @@ class UserPost(models.Model):
         return self.user_id
 
 
-class User(models.Model):
-    user_id = models.CharField(max_length=150)
-    username = models.CharField(max_length=150, null=True, blank=True)
-
-    def __str__(self):
-        return self.username
 
 class ShpionFollowingFollowers(models.Model):
     user_id = models.CharField(max_length=250, null=True, blank=True)
@@ -77,6 +70,13 @@ class Shpion(models.Model):
 class BlackList(models.Model):
     user_id = models.CharField(max_length=250, null=True, blank=True)
     username = models.CharField(max_length=250, null=True, blank=True)
+
+    def __str__(self):
+        return self.username
+
+class SecondaryUser(models.Model):
+    username = models.CharField(max_length=250, null=True, blank=True)
+    secondary_user = models.CharField(max_length=250, null=True, blank=True)
 
     def __str__(self):
         return self.username

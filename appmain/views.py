@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.http import HttpResponse
-from .models import Post, User, UserPost, UserLike, Hashtag, Shpion, ShpionFollowing, ShpionFollowingFollowers, BlackList
+from .models import Post, UserPost, Hashtag, Shpion, ShpionFollowing, ShpionFollowingFollowers, BlackList, PostList, SecondaryUser
 import requests
 import datetime as dt
 from django.conf import settings
@@ -11,10 +11,14 @@ from django.utils.timezone import pytz
 
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.decorators import user_passes_test
+from bs4 import BeautifulSoup
 
 zone = pytz.timezone(settings.TIME_ZONE)
 
+def checkIP():
+    ip = requests.get('http://checkip.dyndns.org').content
+    soup = BeautifulSoup(ip, 'html.parser')
+    return  soup.find('body').text
 
 class LockedIterator(object):
     def __init__(self, it):
@@ -84,6 +88,7 @@ class IndexView(generic.ListView):
             Hashtag.objects.all().delete()
             Post.objects.all().delete()
             UserPost.objects.all().delete()
+            PostList.objects.all().delete()
         elif request.GET['submit'] == 'submit':
             Hashtag.objects.all().delete()
             ShpionFollowingFollowers.objects.all().delete()
@@ -103,7 +108,6 @@ class IndexView(generic.ListView):
             followees_users = ShpionFollowing.objects.all()
             for follow in followees_users:
                 shpion.following.add(follow)
-
         l = []
         for hashtag in hashtags:
             if 'hashtag' in hashtag:
@@ -116,10 +120,18 @@ class IndexView(generic.ListView):
         #     UserPost.objects.filter(hashtag=hashtag).delete()
         #     return super().get(request, *args, **kwargs)
         for hashtag in hashtags:
-            L = instaloader.Instaloader(sleep=False)
-            h = instaloader.Hashtag.from_name(L.context, hashtag)
-            Hashtag.objects.create(hashtag=hashtag, count=int(h.mediacount))
+            PostList.objects.filter(hashtag=hashtag).delete()
+            h = instaloader.Hashtag.from_name(loader.context, hashtag).mediacount
 
+            Hashtag.objects.create(hashtag=hashtag, count=int(h))
+            # posts = instaloader.Hashtag.from_name(loader.context, str(hashtag)).get_all_posts()
+            posts = instaloader.Instaloader().get_hashtag_posts(hashtag)
+
+
+            for post in posts:
+
+                if not PostList.objects.filter(hashtag=hashtag, posts=post.shortcode):
+                    PostList.objects.create(hashtag=hashtag, posts=post.shortcode)
         self.queryset = Hashtag.objects.all()
         return super().get(request, *args, **kwargs)
 
@@ -127,37 +139,62 @@ class IndexView(generic.ListView):
 class HashtagView(generic.ListView):
     template_name = 'hashtag.html'
     queryset =  UserPost.objects.all()
+
     def get(self, request, *args, **kwargs):
         hashtag = request.GET
         if len(hashtag) == 0:
             return render(request, self.template_name, {})
-
-        if 'Обновить' in str(request.GET):
-            Post.objects.all().delete()
+        # if 'Обновить' in str(request.GET):
+        #     Post.objects.all().delete()
         hashtag = hashtag['hashtag']
         L = instaloader.Instaloader()
-        posts = instaloader.Hashtag.from_name(L.context, str(hashtag)).get_all_posts()
+        h = instaloader.Hashtag.from_name(L.context, hashtag).mediacount
+        # posts = instaloader.Hashtag.from_name(L.context, str(hashtag)).get_all_posts()
         # posts = LockedIterator(posts)
+        if PostList.objects.filter(hashtag=hashtag).count() <50:
+            posts = PostList.objects.filter(hashtag=hashtag)
+        else:
+            posts = PostList.objects.filter(hashtag=hashtag).order_by('id')[:50]
+        # posts_ = []
+        #
+        # for post in posts.all():
+        #     print(post.posts)
+        #     for i in post.posts.split(','):
+        #         for char in i:
+        #             if char in '[]<>':
+        #                 i = i.replace(char, '')
+        #         if 'Post' in i:
+        #             i = i.replace('Post', '')
+        #         if ' ' in i:
+        #             i = i.replace(' ', '')
+        #         posts_.append(i)
+        # posts = posts_
+        #
+
+
         shpion = Shpion.objects.all()[0]
-        h = instaloader.Hashtag.from_name(L.context, hashtag)
-        print(int(h.mediacount),  Post.objects.all().count())
-        if int(h.mediacount) != Post.objects.all().count():
-            # print(int(h.mediacount), Hashtag.objects.filter(hashtag=hashtag)[0].count)
-            for post in posts:
+        c = 0
+        for post_ in posts:
                 # print(post.likes)
-                shortcode = post.shortcode
-                user_id = post.owner_id
-                username = post.owner_username
-                # like_users = models.ManyToManyField(UserLike, null=True, blank=True)
-                time = dt.datetime.fromtimestamp(int(post.date_local.timestamp()), tz=zone).strftime(
-                    '%Y-%m-%d %H:%M:%S')
-                is_bound_shpion = False
-                for i in shpion.following.all():
-                    if username in i.followers:
-                        is_bound_shpion = True
-                if not Post.objects.filter(username=username, shortcode=shortcode, hashtag=hashtag):
-                    Post.objects.create(hashtag=hashtag, shortcode=shortcode, user_id=user_id, username=username,
-                                        time=time, is_bound_shpion=is_bound_shpion, count_likes=int(post.likes))
+            c+=1
+            post = instaloader.Post.from_shortcode(L.context, str(post_))
+            shortcode = post.shortcode
+            user_id = post.owner_id
+            username = post.owner_username
+            # like_users = models.ManyToManyField(UserLike, null=True, blank=True)
+            time = dt.datetime.fromtimestamp(int(post.date_local.timestamp()), tz=zone).strftime('%Y-%m-%d %H:%M:%S')
+            is_bound_shpion = False
+            for i in shpion.following.all():
+                if username in i.followers:
+                    is_bound_shpion = True
+            if not Post.objects.filter(shortcode=shortcode, hashtag=hashtag):
+                Post.objects.create(hashtag=hashtag, shortcode=shortcode, user_id=user_id, username=username,
+                                    time=time, is_bound_shpion=is_bound_shpion, count_likes=int(post.likes))
+            post_.delete()
+
+        count_check = Post.objects.filter(hashtag=hashtag).count()
+        print(count_check, h)
+        if int(h) == count_check:
             for post in Post.objects.all():
                 has_secondary_user = False
                 secondary_user = None
@@ -168,22 +205,25 @@ class HashtagView(generic.ListView):
                 not_past_posts_url = None
                 not_past_posts_bound_shpion_url = None
                 is_black_list = False
+
                 if UserPost.objects.filter(user_id=post.user_id):
                     past_posts = UserPost.objects.filter(user_id=post.user_id)[0].past_posts
                     not_past_posts = UserPost.objects.filter(user_id=post.user_id)[0].not_past_posts
                     past_posts_bound_shpion = UserPost.objects.filter(user_id=post.user_id)[0].past_posts_bound_shpion
                     not_past_posts_bound_shpion = UserPost.objects.filter(user_id=post.user_id)[
                         0].not_past_posts_bound_shpion
-                    secondary_user = UserPost.objects.filter(user_id=post.user_id)[0].secondary_user
-                    has_secondary_user = UserPost.objects.filter(user_id=post.user_id)[0].has_secondary_user
+                    # secondary_user = UserPost.objects.filter(user_id=post.user_id)[0].secondary_user
+                    # has_secondary_user = UserPost.objects.filter(user_id=post.user_id)[0].has_secondary_user
                     not_past_posts_url = UserPost.objects.filter(user_id=post.user_id)[0].not_past_posts_url
                     not_past_posts_bound_shpion_url = UserPost.objects.filter(user_id=post.user_id)[
                         0].not_past_posts_bound_shpion_url
                 if UserPost.objects.filter(user_id=post.user_id):
                     UserPost.objects.filter(user_id=post.user_id).delete()
                 if BlackList.objects.filter(username=post.username):
-
                     is_black_list = True
+                if SecondaryUser.objects.filter(username=post.username):
+                    has_secondary_user = True
+                    secondary_user = SecondaryUser.objects.filter(username=post.username)[0].secondary_user
                 userposts = UserPost(user_id=post.user_id, hashtag=hashtag, username=post.username,
                                      secondary_user=secondary_user, has_secondary_user=has_secondary_user,
                                      is_bound_shpion=post.is_bound_shpion, past_posts=past_posts,
@@ -198,13 +238,75 @@ class HashtagView(generic.ListView):
 
                 for i in l:
                     userposts.shortcodes.add(i)
+            true_shortcodes = set()
+            shortcodes = set()
+            for post in UserPost.objects.filter(hashtag=hashtag):
+                for i in post.shortcodes.all():
+                    shortcodes.add(i)
+            for post in UserPost.objects.filter(hashtag=hashtag, is_black_list=False, is_bound_shpion=True):
+                for i in post.shortcodes.all():
+                    true_shortcodes.add(i)
 
+            L = instaloader.Instaloader(sleep=False)
+            all_users = UserPost.objects.filter(hashtag=hashtag)
+            my_users = UserPost.objects.filter(hashtag=hashtag, is_black_list=False, is_bound_shpion=True)
+            for user in all_users:
+                temp = []
+                count = 0
+                for shortcode in shortcodes:
+                    post = instaloader.Post.from_shortcode(L.context, str(shortcode))
+                    # if user.username != str(post.owner_username):
+                    # post = post.get_likes()
+                    # post = LockedIterator(post)
+                    if user.has_secondary_user:
+                        if user.secondary_user in str(list(LockedIterator(post.get_likes()))):
+                            count += 1
+                        else:
+                            temp.append(post.shortcode)
+                    else:
+                        if user.username in str(list(LockedIterator(post.get_likes()))):
+                            count += 1
+                        else:
+                            temp.append(post.shortcode)
 
+                user.not_past_posts_url = str(temp)
+                # print(user.not_past_posts_url)
+                user.past_posts = count
+                user.not_past_posts = len(shortcodes) - count
+                user.save()
+            for user in my_users:
+                temp = []
+                count = 0
+                for shortcode in true_shortcodes:
+                    post = instaloader.Post.from_shortcode(L.context, str(shortcode))
+                    # if user.username != str(post.owner_username):
+                    # post = post..get_likes()
+                    # post = LockedIterator(post)
+                    if user.has_secondary_user:
+                        if user.secondary_user in str(list(LockedIterator(post.get_likes()))):
+                            count += 1
+                        else:
+                            temp.append(post.shortcode)
+                    else:
+                        if user.username in str(list(LockedIterator(post.get_likes()))):
+                            count += 1
+                        else:
+                            temp.append(post.shortcode)
+
+                user.not_past_posts_bound_shpion_url = str(temp)
+                user.past_posts_bound_shpion = count
+                user.not_past_posts_bound_shpion = len(true_shortcodes) - count
+                # print(user.past_posts_bound_shpion)
+                user.save()
+        ip = checkIP()
         # self.queryset = UserPost.objects.filter(hashtag=hashtag)
         # self.queryset.
         self.extra_context ={
             'object_list': UserPost.objects.filter(hashtag=hashtag, is_bound_shpion=True, is_black_list=False),
-            'hashtag': hashtag
+            'hashtag': hashtag,
+            'ip': ip,
+            'check':count_check,
+            'all': h,
         }
 
 
@@ -218,8 +320,8 @@ def get_username(request):
     l = 'https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={"user_id":"' + user_id + '","include_chaining":false,"include_reel":true,"include_suggested_users":false,"include_logged_out_extras":false,"include_highlight_reels":false,"include_related_profiles":false}'
     response = requests.get(l).json()
     username = response['data']['user']['reel']['user']['username']
-    if not User.objects.filter(username=username):
-        User.objects.create(user_id=user_id, username=username)
+    # if not User.objects.filter(username=username):
+    #     User.objects.create(user_id=user_id, username=username)
     UserPost.objects.filter(user_id=user_id).update(username=username)
     red = '/hashtag/?hashtag=' + hashtag
     return redirect(red)
@@ -323,37 +425,31 @@ class SecondaryUserView(generic.ListView):
     template_name = 'secondary_user.html'
 
     def get(self, request, *args, **kwargs):
-        if request.GET:
-            if len(request.GET) == 0:
-                self.queryset = UserPost.objects.filter(has_secondary_user=True)
-                return super().get(request, *args, **kwargs)
-            elif request.GET['submit'] == 'delete':
-                user = UserPost.objects.filter(user_id=request.GET['username'])[0]
-                user.secondary_user = None
-                user.has_secondary_user = False
-                user.save()
-            elif request.GET['submit'] == 'Отправить':
-                username = request.GET['username']
-                secondary_user = request.GET['secondary_user']
-                if UserPost.objects.filter(username=username):
-                    user = UserPost.objects.filter(username=username)[0]
-                    user.secondary_user = secondary_user
-                    user.has_secondary_user = True
-                    user.save()
-        self.queryset = UserPost.objects.filter(has_secondary_user=True)
+        if len(request.GET) == 0:
+            # self.queryset = UserPost.objects.filter(is_black_list=True)
+            self.queryset = SecondaryUser.objects.all()
+            return super().get(request, *args, **kwargs)
+        elif request.GET['submit'] == 'delete':
+            username = request.GET['username']
+            SecondaryUser.objects.filter(username=username).delete()
 
-        return super().get(request, *args, **kwargs)
+        elif request.GET['submit'] == 'Отправить':
+            username = request.GET['username']
+            secondary_user = request.GET['secondary_user']
 
-@method_decorator(login_required, name='dispatch')
-class DetailCheckView(generic.ListView):
-    template_name = 'detailcheck.html'
-
-    def get(self, request, *args, **kwargs):
+            # user = UserPost.objects.filter(username=request.GET['username'])
+            # print(user)
+            # if user:
+            if not SecondaryUser.objects.filter(username=username):
+                SecondaryUser.objects.create(username=username, secondary_user=secondary_user)
+            # if UserPost.objects.filter(username=username):
+            #     user = UserPost.objects.filter(username=username)[0]
+            #     user.is_black_list = True
+            #     user.save()
 
 
-        hashtag = request.GET['hashtag']
-        self.queryset = UserPost.objects.filter(hashtag=hashtag)
-
+        # self.queryset = UserPost.objects.filter(has_secondary_user=True)
+        self.queryset = SecondaryUser.objects.all()
         return super().get(request, *args, **kwargs)
 
 @method_decorator(login_required, name='dispatch')
@@ -380,13 +476,26 @@ class BlackListView(generic.ListView):
                 # user = UserPost.objects.filter(username=request.GET['username'])
                 # print(user)
                 # if user:
-                BlackList.objects.create(username=username)
+                if not BlackList.objects.filter(username=username):
+                    BlackList.objects.create(username=username)
                 # if UserPost.objects.filter(username=username):
                 #     user = UserPost.objects.filter(username=username)[0]
                 #     user.is_black_list = True
                 #     user.save()
 
         self.queryset = BlackList.objects.all()
+        return super().get(request, *args, **kwargs)
+
+@method_decorator(login_required, name='dispatch')
+class DetailCheckView(generic.ListView):
+    template_name = 'detailcheck.html'
+
+    def get(self, request, *args, **kwargs):
+
+
+        hashtag = request.GET['hashtag']
+        self.queryset = UserPost.objects.filter(hashtag=hashtag)
+
         return super().get(request, *args, **kwargs)
 
 @login_required()
@@ -423,7 +532,7 @@ def parse_users(request):
 @login_required()
 def refresh(request):
     hashtag = request.GET['hashtag']
-    Post.objects.filter(hashtag=hashtag).delete()
+    # Post.objects.filter(hashtag=hashtag).delete()
     UserPost.objects.filter(hashtag=hashtag).delete()
     red = '/hashtag/?hashtag=' + hashtag
     return redirect(red)

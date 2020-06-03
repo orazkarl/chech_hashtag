@@ -2,10 +2,10 @@ from django.contrib import admin
 from .models import *
 # Register your models here.
 admin.site.register(Hashtag)
-admin.site.register(UserLike)
+# admin.site.register(UserLike)
 admin.site.register(Post)
 admin.site.register(UserPost)
-admin.site.register(User)
+admin.site.register(PostList)
 admin.site.register(Shpion)
 admin.site.register(ShpionFollowing)
 
