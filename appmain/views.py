@@ -126,8 +126,6 @@ class IndexView(generic.ListView):
             Hashtag.objects.create(hashtag=hashtag, count=int(h))
             # posts = instaloader.Hashtag.from_name(loader.context, str(hashtag)).get_all_posts()
             posts = instaloader.Instaloader().get_hashtag_posts(hashtag)
-
-
             for post in posts:
 
                 if not PostList.objects.filter(hashtag=hashtag, posts=post.shortcode):
@@ -519,8 +517,12 @@ def parse_users(request):
     for user in users:
         if '@' in user:
             user = user.replace('@', '')
-        if not UserPost.objects.filter(username=user, is_bound_shpion=True):
-            l.append('@' + str(user))
+        print(user)
+        for i in ShpionFollowing.objects.all():
+            if user not in i.followers:
+                l.append('@' + str(user))
+        # if not UserPost.objects.filter(username=user, is_bound_shpion=True):
+        #     l.append('@' + str(user))
 
     # hashtag = str(request.GET['hashtag']).split('=')[1]
 
