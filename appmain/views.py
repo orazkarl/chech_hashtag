@@ -513,13 +513,20 @@ def parse_users(request):
         users = request.GET['users']
 
     users = users.splitlines()
-
+    a = []
+    for i in ShpionFollowing.objects.all():
+        a.append(i.followers)
     for user in users:
         if '@' in user:
             user = user.replace('@', '')
         print(user)
-        for i in ShpionFollowing.objects.all():
-            if user not in i.followers:
+
+            # if user not in i.followers:
+            #     l.append('@' + str(user))
+
+        for i in a:
+            print(i)
+            if user not in i:
                 l.append('@' + str(user))
         # if not UserPost.objects.filter(username=user, is_bound_shpion=True):
         #     l.append('@' + str(user))
